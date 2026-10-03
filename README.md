@@ -108,6 +108,20 @@ This application provides a real physical hardware BLE management engine across 
 
 ---
 
+## 🔒 Cross-Platform Location & Bluetooth Permissions Matrix
+
+| Platform | Requires Location Permission for BLE? | Requires Bluetooth Permission / Toggle? | User Prompt Mechanism |
+| :--- | :---: | :---: | :--- |
+| 🤖 **Android 12+** (API 31+) | ❌ **NO** | ✅ **YES** | Native *"Nearby Devices"* Permission Dialog |
+| 🤖 **Android 6–11** (API 23–30) | ✅ **YES** *(Legacy OS Rule)* | ✅ **YES** | Native *"Location Permission"* & GPS Toggle |
+| 🍎 **iOS** (iPhone / iPad) | ❌ **NO** | ✅ **YES** | Native *"Ninja Would Like to Use Bluetooth"* Dialog |
+| 🍎 **macOS** | ❌ **NO** | ✅ **YES** | Native *"Ninja Would Like to Use Bluetooth"* Dialog |
+| 🪟 **Windows 10/11** | ❌ **NO** | ✅ **YES** | Windows Bluetooth System Toggle ON |
+| 🐧 **Linux** | ❌ **NO** | ✅ **YES** | BlueZ Daemon Active |
+| 🌐 **Web** (Chrome / Edge) | ❌ **NO** | ❌ **NO** *(Handled by Browser)* | Browser *"Select a Bluetooth Device"* Hardware Picker |
+
+---
+
 ## 🛠️ Module Architecture
 
 ```
