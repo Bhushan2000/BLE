@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -69,6 +71,7 @@ import com.bhushantechsolutions.ninja.domain.ble.BleDevice
 import com.bhushantechsolutions.ninja.domain.ble.BleGattCharacteristic
 import com.bhushantechsolutions.ninja.domain.ble.BleGattService
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ConnectivityScreen(
     viewModel: ConnectivityViewModel,
@@ -116,8 +119,10 @@ fun ConnectivityScreen(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter
     ) {
+        val screenWidth = maxWidth
         val maxContainerWidth = 840.dp
-        val horizontalPadding = if (maxWidth > 600.dp) 24.dp else 16.dp
+        val isCompact = screenWidth < 500.dp
+        val horizontalPadding = if (screenWidth > 600.dp) 24.dp else 16.dp
 
         LazyColumn(
             modifier = Modifier
@@ -182,6 +187,7 @@ fun ConnectivityScreen(
                         readValue = readValue,
                         notificationMap = notificationMap,
                         activeNotifyingSet = activeNotifyingSet,
+                        isCompact = isCompact,
                         onDiscoverServices = { viewModel.discoverServices() },
                         onReadCharacteristic = { serviceUuid, charUuid -> viewModel.readCharacteristic(serviceUuid, charUuid) },
                         onWriteCharacteristic = { serviceUuid, charUuid, text -> viewModel.writeCharacteristic(serviceUuid, charUuid, text) },
@@ -260,12 +266,14 @@ private fun HeaderTitleSection() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun GattInspectorSection(
     services: List<BleGattService>,
     readValue: String,
     notificationMap: Map<String, String>,
     activeNotifyingSet: Set<String>,
+    isCompact: Boolean,
     onDiscoverServices: () -> Unit,
     onReadCharacteristic: (String, String) -> Unit,
     onWriteCharacteristic: (String, String, String) -> Boolean,
@@ -277,12 +285,8 @@ private fun GattInspectorSection(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
+            if (isCompact) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = "GATT SERVICES EXPLORER",
                         style = MaterialTheme.typography.labelSmall.copy(
@@ -295,16 +299,48 @@ private fun GattInspectorSection(
                         text = if (services.isEmpty()) "Tap 'Discover Services' to query GATT profile" else "Discovered Services (${services.size})",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    FilledTonalButton(
+                        onClick = onDiscoverServices,
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text("Discover Services", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                    }
                 }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                FilledTonalButton(
-                    onClick = onDiscoverServices,
-                    shape = RoundedCornerShape(14.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Discover Services", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "GATT SERVICES EXPLORER",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            ),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = if (services.isEmpty()) "Tap 'Discover Services' to query GATT profile" else "Discovered Services (${services.size})",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    FilledTonalButton(
+                        onClick = onDiscoverServices,
+                        shape = RoundedCornerShape(14.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text("Discover Services", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                    }
                 }
             }
 
@@ -336,6 +372,7 @@ private fun GattInspectorSection(
                     service = service,
                     notificationMap = notificationMap,
                     activeNotifyingSet = activeNotifyingSet,
+                    isCompact = isCompact,
                     onReadCharacteristic = { charUuid -> onReadCharacteristic(service.uuid, charUuid) },
                     onWriteCharacteristic = { charUuid, text -> onWriteCharacteristic(service.uuid, charUuid, text) },
                     onToggleNotification = { charUuid -> onToggleNotification(service.uuid, charUuid) }
@@ -351,6 +388,7 @@ private fun GattServiceCard(
     service: BleGattService,
     notificationMap: Map<String, String>,
     activeNotifyingSet: Set<String>,
+    isCompact: Boolean,
     onReadCharacteristic: (String) -> Unit,
     onWriteCharacteristic: (String, String) -> Boolean,
     onToggleNotification: (String) -> Unit
@@ -369,8 +407,10 @@ private fun GattServiceCard(
                 Text(
                     text = service.name,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f)
                 )
+                Spacer(modifier = Modifier.width(6.dp))
                 PropertyBadge(label = service.shortUuid, color = MaterialTheme.colorScheme.primary)
             }
 
@@ -387,6 +427,7 @@ private fun GattServiceCard(
                     characteristic = chara,
                     isNotifying = activeNotifyingSet.contains(chara.uuid),
                     notificationText = notificationMap[chara.uuid],
+                    isCompact = isCompact,
                     onRead = { onReadCharacteristic(chara.uuid) },
                     onWrite = { text -> onWriteCharacteristic(chara.uuid, text) },
                     onToggleNotify = { onToggleNotification(chara.uuid) }
@@ -397,11 +438,13 @@ private fun GattServiceCard(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun GattCharacteristicItem(
     characteristic: BleGattCharacteristic,
     isNotifying: Boolean,
     notificationText: String?,
+    isCompact: Boolean,
     onRead: () -> Unit,
     onWrite: (String) -> Boolean,
     onToggleNotify: () -> Unit
@@ -423,8 +466,10 @@ private fun GattCharacteristicItem(
         ) {
             Text(
                 text = characteristic.name,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.weight(1f)
             )
+            Spacer(modifier = Modifier.width(6.dp))
             PropertyBadge(label = characteristic.shortUuid, color = MaterialTheme.colorScheme.primary)
         }
 
@@ -438,8 +483,11 @@ private fun GattCharacteristicItem(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Static Property Capability Indicators
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        // Static Property Capability Badges (Wraps cleanly on narrow screens)
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
             if (characteristic.isReadable) PropertyBadge(label = "READABLE", color = MaterialTheme.colorScheme.primary)
             if (characteristic.isWritable) PropertyBadge(label = "WRITABLE", color = MaterialTheme.colorScheme.secondary)
             if (characteristic.isNotifiable) PropertyBadge(label = "NOTIFIABLE", color = MaterialTheme.colorScheme.tertiary)
@@ -467,17 +515,18 @@ private fun GattCharacteristicItem(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Action Buttons Row
-        Row(
-            modifier = Modifier.fillMaxWidth(),
+        // Action Buttons Row / Flow (Adaptive for mobile vs desktop)
+        FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
             if (characteristic.isReadable) {
                 OutlinedButton(
                     onClick = onRead,
                     shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                    modifier = if (isCompact) Modifier.fillMaxWidth() else Modifier
                 ) {
                     Text("Read Value", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
                 }
@@ -488,6 +537,7 @@ private fun GattCharacteristicItem(
                     onClick = onToggleNotify,
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                    modifier = if (isCompact) Modifier.fillMaxWidth() else Modifier,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isNotifying) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.secondary
                     )
@@ -502,26 +552,50 @@ private fun GattCharacteristicItem(
 
         if (characteristic.isWritable) {
             Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = writeText,
-                    onValueChange = { writeText = it },
-                    label = { Text("Data to write") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true
-                )
 
-                Button(
-                    onClick = { onWrite(writeText) },
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-                    modifier = Modifier.height(56.dp)
+            if (isCompact) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Write Value", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                    OutlinedTextField(
+                        value = writeText,
+                        onValueChange = { writeText = it },
+                        label = { Text("Data to write") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    Button(
+                        onClick = { onWrite(writeText) },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Write Value", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = writeText,
+                        onValueChange = { writeText = it },
+                        label = { Text("Data to write") },
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+
+                    Button(
+                        onClick = { onWrite(writeText) },
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        modifier = Modifier.height(56.dp)
+                    ) {
+                        Text("Write Value", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+                    }
                 }
             }
         }

@@ -4,7 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
@@ -20,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import com.bhushantechsolutions.ninja.data.ble.AndroidBleManager
+import com.bhushantechsolutions.ninja.data.ble.androidApplicationContext
 import com.bhushantechsolutions.ninja.ui.ConnectivityViewModel
 
 class MainActivity : ComponentActivity() {
@@ -39,6 +39,7 @@ class MainActivity : ComponentActivity() {
 
         checkAndRequestPermissions()
 
+        androidApplicationContext = applicationContext
         val bleManager = AndroidBleManager(applicationContext)
 
         setContent {

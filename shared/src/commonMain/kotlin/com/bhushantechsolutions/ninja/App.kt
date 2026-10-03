@@ -12,7 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import com.bhushantechsolutions.ninja.data.mock.MockBleManager
+import com.bhushantechsolutions.ninja.data.ble.createPlatformBleManager
 import com.bhushantechsolutions.ninja.ui.ConnectivityScreen
 import com.bhushantechsolutions.ninja.ui.ConnectivityViewModel
 import com.bhushantechsolutions.ninja.ui.PlatformSystemBarTheme
@@ -67,7 +67,7 @@ private val LightColorScheme = lightColorScheme(
 @Preview
 fun App(viewModel: ConnectivityViewModel? = null) {
     val activeViewModel = viewModel ?: remember {
-        ConnectivityViewModel(bleManager = MockBleManager())
+        ConnectivityViewModel(bleManager = createPlatformBleManager())
     }
 
     val isDark = isSystemInDarkTheme()
